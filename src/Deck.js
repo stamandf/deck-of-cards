@@ -1,7 +1,9 @@
 import React from 'react';
 import axios from 'axios';
 import Card from './Card';
+import EightCards from './EightCards';
 import './Deck.css';
+
 
 // API to Shuffle a deck: "https://deckofcardsapi.com/api/deck/new/shuffle/?deck_count=1";
 // API to Draw a card = `https://deckofcardsapi.com/api/deck/${deckID}/draw/?count=1`;
@@ -13,7 +15,8 @@ export default class Deck extends React.Component {
         super(props);
         this.state = {
             deck: null,
-            card: null,
+            // card: null,
+            isDeckOfOne: false,
             drawn: [],
             isRemaining: true
         }
@@ -52,10 +55,10 @@ export default class Deck extends React.Component {
             axios.get(cardURL).then((response) => {
                 if (!response.data.success) {
                     this.setState({ isRemaining: false});
-                    // alert("No card remaining!");
                 } else {
                     this.setState(st => ({
-                        card: response.data.cards[0],
+                        // card: response.data.cards[0],
+                        isDeckOfOne: true, //request one card
                         drawn: [
                             ...st.drawn,
                             {
@@ -66,23 +69,58 @@ export default class Deck extends React.Component {
                         ]
                     }));
                 }
-                
+                // console.log("drawACard", this.state.drawn);
             }).catch((error) => {
                 console.log("Unable to access:", error);
                 
             })
     }
+
+    draw8Cards = () => {
+        // console.log("Drawing 8 cards!");
+        let deckID = this.state.deck.deck_id;
+        let cardURL = `${API_BASE_URL}/${deckID}/draw/?count=8`;
+            axios.get(cardURL).then((response) => {
+                console.log("response = ", response.data)
+                if(!response.data.success) {
+                    this.setState({isRemaining: false})
+                } else {
+                    this.setState({
+                        isDeckOfOne: false,  //request 8 cards
+                        drawn: response.data.cards
+                    })
+                }
+                // console.log("draw8Cards Drawn=", this.state.drawn);
+            }).catch((error) => {
+                console.log("Unable to access:", error);
+                
+            })
+            
+    }
     render() {
-        const cards = this.state.drawn.map(card => (
+ 
+        let cards = null;
+        if (this.state.isDeckOfOne) {
+            cards = this.state.drawn.map(card => (
             <Card key={card.id} image={card.image} name={card.name}/>
         ));
+        } else {
+            cards = this.state.drawn.map((card, index) => (
+                <EightCards  key={card.code} index={index} image={card.image} name={card.suit} />
+            ))
+        }
+        
         return (
             <div className="Deck">
                 <h1 className="Deck-title">♦︎ Card Dealer︎︎♦︎</h1>
                 <h2 className="Deck-title subtitle">♦︎ A little demo made with React ♦︎</h2>
-                {this.state.isRemaining ? <button className="Deck-btn" onClick={this.drawACard}>GIMME A CARD!</button> : <p className="Deck-btn">NO MORE CARDS!</p>}
+                {
+                    this.state.isRemaining ? 
+                    <button className="Deck-btn" onClick={this.drawACard}>GIMME A CARD!</button> : 
+                    <p className="Deck-btn">NO MORE CARDS!</p>
+                }
+                {this.state.isRemaining && <button className="Deck-btn" onClick={this.draw8Cards} >GIMME 8 CARDS!</button>} 
                 <div className="Deck-cardarea">{cards}</div>
-                {/* <div className="Deck-cardarea">{this.state.card && cards} </div> */}
             </div>
         )
     }

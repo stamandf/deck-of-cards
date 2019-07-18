@@ -10,6 +10,7 @@ export default class Card extends React.Component {
         this._transform = `translate(${xPos}px, ${yPos}px) rotate(${angle}deg)`;
     }
     render() {
+      console.log('transform:', this._transform);
         return (
           <img
             style={{ transform: this._transform }}
